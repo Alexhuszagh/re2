@@ -11,6 +11,7 @@ include(CTest)
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 option(RE2_BUILD_TESTS "use PCRE in tests and benchmarks" OFF)
+option(RE2_INSTALL "Provide installation target for RE2" OFF)
 
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
@@ -50,6 +51,9 @@ if(USEPCRE)
     list(APPEND EXTRA_TARGET_LINK_LIBRARIES pcre)
 endif()
 
+# LIBRARIES
+# ---------
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(RE2_SOURCES
@@ -79,19 +83,21 @@ set(RE2_SOURCES
 
 add_library(re2 ${RE2_SOURCES})
 
-set(RE2_TESTING_SOURCES
-    re2/testing/backtrack.cc
-    re2/testing/dump.cc
-    re2/testing/exhaustive_tester.cc
-    re2/testing/null_walker.cc
-    re2/testing/regexp_generator.cc
-    re2/testing/string_generator.cc
-    re2/testing/tester.cc
-    util/pcre.cc
-    )
+# UNIT TESTING
+# ------------
 
 if(RE2_BUILD_TESTS)
-    # UNIT TESTING
+    set(RE2_TESTING_SOURCES
+        re2/testing/backtrack.cc
+        re2/testing/dump.cc
+        re2/testing/exhaustive_tester.cc
+        re2/testing/null_walker.cc
+        re2/testing/regexp_generator.cc
+        re2/testing/string_generator.cc
+        re2/testing/tester.cc
+        util/pcre.cc
+    )
+
     add_library(testing STATIC ${RE2_TESTING_SOURCES})
 
     set(RE2_TEST_TARGETS
@@ -141,5 +147,10 @@ if(RE2_BUILD_TESTS)
         )
 endif()
 
-install(FILES ${RE2_HEADERS} DESTINATION include/re2)
-install(TARGETS re2 ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+# INSTALL
+# -------
+
+if(RE2_INSTALL)
+    install(FILES ${RE2_HEADERS} DESTINATION include/re2)
+    install(TARGETS re2 ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+endif()
