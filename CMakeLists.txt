@@ -37,6 +37,9 @@ if(MINGW OR UNIX)
     list(APPEND EXTRA_TARGET_LINK_LIBRARIES -pthread)
 endif()
 
+# RUNTIME
+# -------
+
 if(MINGW AND NOT BUILD_SHARED_LIBS)
   # STATIC RUNTIME
   set(CMAKE_CXX_FLAGS "-static -static-libgcc -static-libstdc++ ${CMAKE_CXX_FLAGS}")
