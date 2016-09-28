@@ -10,6 +10,7 @@ include(CTest)
 
 option(BUILD_SHARED_LIBS "build shared libraries" OFF)
 option(USEPCRE "use PCRE in tests and benchmarks" OFF)
+option(RE2_BUILD_TESTS "use PCRE in tests and benchmarks" OFF)
 
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
@@ -27,19 +28,26 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 if(WIN32)
-  add_definitions(-DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX)
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
-elseif(UNIX)
-  add_compile_options(-pthread)
-  list(APPEND EXTRA_TARGET_LINK_LIBRARIES -pthread)
+    add_definitions(-DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+endif()
+
+if(MINGW OR UNIX)
+    add_compile_options(-pthread)
+    list(APPEND EXTRA_TARGET_LINK_LIBRARIES -pthread)
+endif()
+
+if(MINGW AND NOT BUILD_SHARED_LIBS)
+  # STATIC RUNTIME
+  set(CMAKE_CXX_FLAGS "-static -static-libgcc -static-libstdc++ ${CMAKE_CXX_FLAGS}")
 endif()
 
 if(USEPCRE)
-  add_definitions(-DUSEPCRE)
-  list(APPEND EXTRA_TARGET_LINK_LIBRARIES pcre)
+    add_definitions(-DUSEPCRE)
+    list(APPEND EXTRA_TARGET_LINK_LIBRARIES pcre)
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(RE2_SOURCES
     re2/bitstate.cc
@@ -68,7 +76,7 @@ set(RE2_SOURCES
 
 add_library(re2 ${RE2_SOURCES})
 
-set(TESTING_SOURCES
+set(RE2_TESTING_SOURCES
     re2/testing/backtrack.cc
     re2/testing/dump.cc
     re2/testing/exhaustive_tester.cc
@@ -79,53 +87,56 @@ set(TESTING_SOURCES
     util/pcre.cc
     )
 
-add_library(testing STATIC ${TESTING_SOURCES})
+if(RE2_BUILD_TESTS)
+    # UNIT TESTING
+    add_library(testing STATIC ${RE2_TESTING_SOURCES})
 
-set(TEST_TARGETS
-    charclass_test
-    compile_test
-    filtered_re2_test
-    mimics_pcre_test
-    parse_test
-    possible_match_test
-    re2_test
-    re2_arg_test
-    regexp_test
-    required_prefix_test
-    search_test
-    set_test
-    simplify_test
-    string_generator_test
+    set(RE2_TEST_TARGETS
+        charclass_test
+        compile_test
+        filtered_re2_test
+        mimics_pcre_test
+        parse_test
+        possible_match_test
+        re2_test
+        re2_arg_test
+        regexp_test
+        required_prefix_test
+        search_test
+        set_test
+        simplify_test
+        string_generator_test
 
-    dfa_test
-    exhaustive1_test
-    exhaustive2_test
-    exhaustive3_test
-    exhaustive_test
-    random_test
-    )
+        dfa_test
+        exhaustive1_test
+        exhaustive2_test
+        exhaustive3_test
+        exhaustive_test
+        random_test
+        )
 
-set(BENCHMARK_TARGETS
-    regexp_benchmark
-    )
+    set(BENCHMARK_TARGETS
+        regexp_benchmark
+        )
 
-foreach(target ${TEST_TARGETS})
-  add_executable(${target} re2/testing/${target}.cc util/test.cc)
-  target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
-  add_test(NAME ${target} COMMAND ${target})
-endforeach(target)
+    foreach(target ${RE2_TEST_TARGETS})
+      add_executable(${target} re2/testing/${target}.cc util/test.cc)
+      target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+      add_test(NAME ${target} COMMAND ${target})
+    endforeach(target)
 
-foreach(target ${BENCHMARK_TARGETS})
-  add_executable(${target} re2/testing/${target}.cc util/benchmark.cc)
-  target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
-endforeach(target)
+    foreach(target ${BENCHMARK_TARGETS})
+      add_executable(${target} re2/testing/${target}.cc util/benchmark.cc)
+      target_link_libraries(${target} testing re2 ${EXTRA_TARGET_LINK_LIBRARIES})
+    endforeach(target)
 
-set(RE2_HEADERS
-    re2/filtered_re2.h
-    re2/re2.h
-    re2/set.h
-    re2/stringpiece.h
-    )
+    set(RE2_HEADERS
+        re2/filtered_re2.h
+        re2/re2.h
+        re2/set.h
+        re2/stringpiece.h
+        )
+endif()
 
 install(FILES ${RE2_HEADERS} DESTINATION include/re2)
 install(TARGETS re2 ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
