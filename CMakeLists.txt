@@ -38,6 +38,10 @@ if(MINGW OR UNIX)
     list(APPEND EXTRA_TARGET_LINK_LIBRARIES -pthread)
 endif()
 
+if(UNIX)
+    add_definitions(-fPIC)
+endif()
+
 # RUNTIME
 # -------
 
