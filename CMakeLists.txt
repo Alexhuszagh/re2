@@ -48,16 +48,17 @@ if(MINGW OR UNIX)
     list(APPEND EXTRA_TARGET_LINK_LIBRARIES -pthread)
 endif()
 
-if(UNIX)
-    add_definitions(-fPIC)
-endif()
-
 # RUNTIME
 # -------
 
-if(MINGW AND NOT BUILD_SHARED_LIBS)
-  # STATIC RUNTIME
-  set(CMAKE_CXX_FLAGS "-static -static-libgcc -static-libstdc++ ${CMAKE_CXX_FLAGS}")
+if(NOT BUILD_SHARED_LIBS)
+    if(MINGW OR MSYS OR CYGWIN)
+        # STATIC RUNTIME
+        set(CMAKE_CXX_FLAGS "-static -static-libgcc -static-libstdc++ ${CMAKE_CXX_FLAGS}")
+    elseif(UNIX)
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+        add_definitions(-fPIC)
+    endif()
 endif()
 
 if(USEPCRE)
