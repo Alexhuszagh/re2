@@ -388,7 +388,7 @@ static void TestRecursion(int size, const char* pattern) {
 
 // A meta-quoted string, interpreted as a pattern, should always match
 // the original unquoted string.
-static void TestQuoteMeta(string unquoted,
+static void TestQuoteMeta(const string& unquoted,
                           const RE2::Options& options = RE2::DefaultOptions) {
   string quoted = RE2::QuoteMeta(unquoted);
   RE2 re(quoted, options);
@@ -398,8 +398,9 @@ static void TestQuoteMeta(string unquoted,
 
 // A meta-quoted string, interpreted as a pattern, should always match
 // the original unquoted string.
-static void NegativeTestQuoteMeta(string unquoted, string should_not_match,
-                                  const RE2::Options& options = RE2::DefaultOptions) {
+static void NegativeTestQuoteMeta(
+    const string& unquoted, const string& should_not_match,
+    const RE2::Options& options = RE2::DefaultOptions) {
   string quoted = RE2::QuoteMeta(unquoted);
   RE2 re(quoted, options);
   EXPECT_FALSE(RE2::FullMatch(should_not_match, re))
@@ -1458,7 +1459,7 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
   EXPECT_TRUE(re.Match(null, 0, null.size(), RE2::UNANCHORED,
                        matches, arraysize(matches)));
   for (int i = 0; i < arraysize(matches); i++) {
-    EXPECT_TRUE(matches[i] == NULL);
+    EXPECT_TRUE(matches[i] == StringPiece());
     EXPECT_TRUE(matches[i].data() == NULL);  // always null
     EXPECT_TRUE(matches[i] == "");
   }
@@ -1469,16 +1470,16 @@ TEST(RE2, NullVsEmptyStringSubmatches) {
   StringPiece empty("");
   EXPECT_TRUE(re.Match(empty, 0, empty.size(), RE2::UNANCHORED,
                        matches, arraysize(matches)));
-  EXPECT_TRUE(matches[0] == NULL);
+  EXPECT_TRUE(matches[0] == StringPiece());
   EXPECT_TRUE(matches[0].data() != NULL);  // empty, not null
   EXPECT_TRUE(matches[0] == "");
-  EXPECT_TRUE(matches[1] == NULL);
+  EXPECT_TRUE(matches[1] == StringPiece());
   EXPECT_TRUE(matches[1].data() != NULL);  // empty, not null
   EXPECT_TRUE(matches[1] == "");
-  EXPECT_TRUE(matches[2] == NULL);
+  EXPECT_TRUE(matches[2] == StringPiece());
   EXPECT_TRUE(matches[2].data() == NULL);
   EXPECT_TRUE(matches[2] == "");
-  EXPECT_TRUE(matches[3] == NULL);
+  EXPECT_TRUE(matches[3] == StringPiece());
   EXPECT_TRUE(matches[3].data() == NULL);
   EXPECT_TRUE(matches[3] == "");
 }

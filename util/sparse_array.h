@@ -273,7 +273,7 @@ class SparseArray {
   iterator SetInternal(bool allow_overwrite, int i, U&& v) {  // NOLINT
     DebugCheckInvariants();
     if (static_cast<uint32_t>(i) >= static_cast<uint32_t>(max_size_)) {
-      assert(!"illegal index");
+      assert(false && "illegal index");
       // Semantically, end() would be better here, but we already know
       // the user did something stupid, so begin() insulates them from
       // dereferencing an invalid pointer.
@@ -309,6 +309,20 @@ class SparseArray {
   // are being maintained. This is called at the end of the constructor
   // and at the beginning and end of all public non-const member functions.
   void DebugCheckInvariants() const;
+
+  static bool ShouldInitializeMemory() {
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+    return true;
+#else
+    return false;
+#endif
+#elif defined(RE2_ON_VALGRIND)
+    return true;
+#else
+    return false;
+#endif
+  }
 
   int size_ = 0;
   int max_size_ = 0;
@@ -415,12 +429,12 @@ void SparseArray<Value>::resize(int max_size) {
 
     dense_.resize(max_size);
 
-#ifdef MEMORY_SANITIZER
-    for (int i = max_size_; i < max_size; i++) {
-      sparse_to_dense_[i] = 0xababababU;
-      dense_[i].index_ = 0xababababU;
+    if (ShouldInitializeMemory()) {
+      for (int i = max_size_; i < max_size; i++) {
+        sparse_to_dense_[i] = 0xababababU;
+        dense_[i].index_ = 0xababababU;
+      }
     }
-#endif
   }
   max_size_ = max_size;
   if (size_ > max_size_)
@@ -483,12 +497,12 @@ template<typename Value> SparseArray<Value>::SparseArray(int max_size) {
   dense_.resize(max_size);
   size_ = 0;
 
-#ifdef MEMORY_SANITIZER
-  for (int i = 0; i < max_size; i++) {
-    sparse_to_dense_[i] = 0xababababU;
-    dense_[i].index_ = 0xababababU;
+  if (ShouldInitializeMemory()) {
+    for (int i = 0; i < max_size; i++) {
+      sparse_to_dense_[i] = 0xababababU;
+      dense_[i].index_ = 0xababababU;
+    }
   }
-#endif
 
   DebugCheckInvariants();
 }

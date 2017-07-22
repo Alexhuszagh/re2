@@ -24,7 +24,7 @@ StringGenerator::StringGenerator(int maxlen,
       random_(false), nrandom_(0) {
 
   // Degenerate case: no letters, no non-empty strings.
-  if (alphabet_.size() == 0)
+  if (alphabet_.empty())
     maxlen_ = 0;
 
   // Next() will return empty string (digits_ is empty).
@@ -85,7 +85,7 @@ const StringPiece& StringGenerator::Next() {
   CHECK(hasnext_);
   if (generate_null_) {
     generate_null_ = false;
-    sp_ = NULL;
+    sp_ = StringPiece();
     return sp_;
   }
   s_.clear();

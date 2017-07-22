@@ -13,6 +13,10 @@ option(USEPCRE "use PCRE in tests and benchmarks" OFF)
 option(RE2_BUILD_TESTS "use PCRE in tests and benchmarks" OFF)
 option(RE2_INSTALL "Provide installation target for RE2" OFF)
 
+# CMake seems to have no way to enable/disable testing per subproject,
+# so we provide an option similar to BUILD_TESTING, but just for RE2.
+option(RE2_BUILD_TESTING "enable testing for RE2" ON)
+
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -24,6 +28,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     cmake_minimum_required(VERSION 3.4)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
   endif()
+  # CMake defaults to /W3, but some users like /W4 (or /Wall) and /WX,
+  # so we disable various warnings that aren't particularly helpful.
+  add_compile_options(/wd4100 /wd4201 /wd4456 /wd4457 /wd4702 /wd4815)
+elseif(CYGWIN OR MINGW)
+  # See https://stackoverflow.com/questions/38139631 for details.
+  add_compile_options(-std=gnu++11)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   add_compile_options(-std=c++11)
 endif()
